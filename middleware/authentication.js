@@ -1,21 +1,13 @@
-const jwt = require('jsonwebtoken')
-const { UnauthenticatedError } = require('../errors')
+const { UnauthenticatedError } = require('../errors');
 
-const auth = async (req, res, next) => {
-  const authHeader = req.headers.authorization
-  if (!authHeader || !authHeader.startsWith('Bearer')) {
-    throw new UnauthenticatedError('Authentication invalid')
+const authenticateUser = (req, res, next) => {
+  if (!req.session.userId) {
+    // If user is not logged in, redirect to login page
+    req.flash('error', 'You must be logged in to view this page.');
+    return res.redirect('/');
   }
+  // User is authenticated
+  next();
+};
 
-  const token = authHeader.split(' ')[1]
-
-  try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET)
-    req.user = { userId: payload.userId, name: payload.name }
-    next()
-  } catch (error) {
-    throw new UnauthenticatedError('Authentication invalid')
-  }
-}
-
-module.exports = auth
+module.exports = authenticateUser;

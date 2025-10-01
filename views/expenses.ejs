@@ -1,0 +1,58 @@
+<%- include('partials/head') %>
+<%- include('partials/header') %>
+
+<div class="container">
+  <h2>Your Expenses</h2>
+
+  <form action="/logout" method="POST" style="text-align: right; margin-bottom: 20px;">
+    <button type="submit" class="btn btn-warning">Logout</button>
+  </form>
+
+  <!-- Flash messages -->
+  <% if (errors.length > 0) { %>
+    <div class="alert alert-danger">
+      <% errors.forEach(err => { %>
+        <p><%= err %></p>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (info.length > 0) { %>
+    <div class="alert alert-success">
+      <% info.forEach(msg => { %>
+        <p><%= msg %></p>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <form id="filterForm">
+    <label for="category">Category:</label>
+    <select id="category" name="category">
+      <option value="">All</option>
+      <option value="Utilities">Utilities</option>
+      <option value="Entertainment">Entertainment</option>
+      <option value="Groceries">Groceries</option>
+    </select>
+
+    <label for="startDate">From:</label>
+    <input type="date" id="startDate" name="startDate" />
+
+    <label for="endDate">To:</label>
+    <input type="date" id="endDate" name="endDate" />
+
+    <button type="submit">Apply Filter</button>
+  </form>
+
+  <ul id="expenseList">
+    <% expenses.forEach(exp => { %>
+      <li>
+        <%= exp.description %> - $<%= exp.amount %> (<%= exp.category %>) on
+        <%= new Date(exp.date).toLocaleDateString() %>
+      </li>
+    <% }) %>
+  </ul>
+</div>
+
+<script src="/expenses.js"></script>
+
+<%- include('partials/footer') %>
