@@ -1,28 +1,62 @@
-const User = require('../models/User')
-const { StatusCodes } = require('http-status-codes')
-const { BadRequestError, UnauthenticatedError } = require('../errors')
-
-const register = async (req, res) => {
-  const { name, email, password } = req.body
-  if (!name || !email || !password) throw new BadRequestError('Please provide all values')
-  
-  const user = await User.create({ name, email, password })
-  const token = user.createJWT()
-  res.status(StatusCodes.CREATED).json({ user: { name: user.name }, token })
-}
+const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 
 const login = async (req, res) => {
-  const { email, password } = req.body
-  if (!email || !password) throw new BadRequestError('Please provide email and password')
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      req.flash('error', 'Please provide email and password');
+      return res.redirect('/');
+    }
 
-  const user = await User.findOne({ email })
-  if (!user) throw new UnauthenticatedError('Invalid credentials')
-  
-  const isPasswordCorrect = await user.comparePassword(password)
-  if (!isPasswordCorrect) throw new UnauthenticatedError('Invalid credentials')
-  
-  const token = user.createJWT()
-  res.status(StatusCodes.OK).json({ user: { name: user.name }, token })
-}
+    const user = await User.findOne({ email });
+    if (!user) {
+      req.flash('error', 'Invalid email or password.');
+      return res.redirect('/');
+    }
 
-module.exports = { register, login }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      req.flash('error', 'Invalid email or password.');
+      return res.redirect('/');
+    }
+
+    // Successful login → set session
+    req.session.userId = user._id;
+    req.flash('info', 'Login successful!');
+    res.redirect('/expenses');
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Something went wrong.');
+    res.redirect('/');
+  }
+};
+
+const register = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      req.flash('error', 'Please provide email and password');
+      return res.redirect('/');
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      req.flash('error', 'Email already registered.');
+      return res.redirect('/');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({ email, password: hashedPassword });
+
+    req.session.userId = user._id;
+    req.flash('info', 'Registration successful!');
+    res.redirect('/expenses');
+  } catch (err) {
+    console.error(err);
+    req.flash('error', 'Something went wrong.');
+    res.redirect('/');
+  }
+};
+
+module.exports = { login, register };
