@@ -1,12 +1,8 @@
-const { UnauthenticatedError } = require('../errors');
-
 const authenticateUser = (req, res, next) => {
-  if (!req.session.userId) {
-    // If user is not logged in, redirect to login page
-    req.flash('error', 'You must be logged in to view this page.');
+  if (!req.user) {
+    req.flash('error', "You can't access that page before logging in.");
     return res.redirect('/');
   }
-  // User is authenticated
   next();
 };
 
