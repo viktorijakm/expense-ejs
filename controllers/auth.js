@@ -1,42 +1,18 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const passport = require('passport');
 
-const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      req.flash('error', 'Please provide email and password');
-      return res.redirect('/');
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      req.flash('error', 'Invalid email or password.');
-      return res.redirect('/');
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      req.flash('error', 'Invalid email or password.');
-      return res.redirect('/');
-    }
-
-    // Successful login → set session
-    req.session.userId = user._id;
-    req.flash('info', 'Login successful!');
-    res.redirect('/expenses');
-  } catch (err) {
-    console.error(err);
-    req.flash('error', 'Something went wrong.');
-    res.redirect('/');
-  }
-};
-
+// Registration
 const register = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      req.flash('error', 'Please provide email and password');
+    const { email, password, password1 } = req.body;
+    if (!email || !password || !password1) {
+      req.flash('error', 'Please fill in all fields.');
+      return res.redirect('/');
+    }
+
+    if (password !== password1) {
+      req.flash('error', 'Passwords do not match.');
       return res.redirect('/');
     }
 
@@ -49,9 +25,12 @@ const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({ email, password: hashedPassword });
 
+    // Optionally store session info
     req.session.userId = user._id;
-    req.flash('info', 'Registration successful!');
-    res.redirect('/expenses');
+    req.session.email = user.email;
+
+    req.flash('info', 'Registration successful! Please log in.');
+    res.redirect('/');
   } catch (err) {
     console.error(err);
     req.flash('error', 'Something went wrong.');
@@ -59,4 +38,13 @@ const register = async (req, res) => {
   }
 };
 
-module.exports = { login, register };
+// Login handled by Passport
+const login = (req, res, next) => {
+  passport.authenticate('local', {
+    successRedirect: '/expenses',
+    failureRedirect: '/',
+    failureFlash: true,
+  })(req, res, next);
+};
+
+module.exports = { register, login };
