@@ -1,0 +1,39 @@
+<%- include('partials/head.ejs') %>
+<%- include('partials/header.ejs') %>
+
+<h2>Your Budgets</h2>
+<a href="/api/v1/budgets/add">Add New Budget</a>
+
+<% if (budgets.length === 0) { %>
+  <p>No budgets yet.</p>
+<% } else { %>
+  <table border="1" cellpadding="5">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Limit</th>
+        <th>Period</th>
+        <th>Active</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% budgets.forEach(budget => { %>
+        <tr>
+          <td><%= budget.name %></td>
+          <td>$<%= budget.limit %></td>
+          <td><%= budget.period %></td>
+          <td><%= budget.active ? 'Yes' : 'No' %></td>
+          <td>
+            <a href="/api/v1/budgets/edit/<%= budget._id %>">Edit</a>
+            <form method="POST" action="/api/v1/budgets/delete/<%= budget._id %>" style="display:inline;">
+              <button type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<%- include('partials/footer.ejs') %>

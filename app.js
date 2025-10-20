@@ -26,11 +26,21 @@ const flash = require('connect-flash');
 // Routers
 const authRouter = require('./routes/auth');
 const expensesRouter = require('./routes/expenses');
+const budgetsRouter = require('./routes/budgets');
+// const sessionRoutes = require('./routes/sessionRoutes');
 
 // Passport init
 const passportInit = require('./passport/passportInit');
 
-// EJS
+const cookieParser = require("cookie-parser");
+const { csrfSync } = require("csrf-sync");
+
+const {
+  csrfSynchronisedProtection,
+  generateToken
+} = csrfSync();
+
+// EJS setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -47,6 +57,12 @@ app.use(rateLimiter({ windowMs: 15 * 60 * 1000, max: 100 }));
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(cookieParser(process.env.SESSION_SECRET));
+
+// After body parser but before routes
+app.use(csrfSynchronisedProtection);
+
+
 // ----- Sessions -----
 const store = new MongoDBStore({
   uri: process.env.MONGO_URI,
@@ -56,59 +72,79 @@ store.on('error', (error) => console.error('Session store error:', error));
 
 const sessionParams = {
   secret: process.env.SESSION_SECRET,
-  resave: true,
-  saveUninitialized: true,
+  resave: false,
+  saveUninitialized: false,
   store,
   cookie: { secure: false, sameSite: 'strict' },
 };
+
 if (app.get('env') === 'production') {
   app.set('trust proxy', 1);
   sessionParams.cookie.secure = true;
 }
+
 app.use(session(sessionParams));
 
 // Flash messages
 app.use(flash());
 
-// Passport
+// Passport setup
 passportInit();
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+app.use(csrfSynchronisedProtection);
+
 // Make user and flash messages available in all views
 app.use((req, res, next) => {
+  res.locals._csrf = generateToken(req);
   res.locals.user = req.user || null;
-  res.locals.errors = req.flash('error');
-  res.locals.info = req.flash('info');
+  res.locals.errors = req.flash("error");
+  res.locals.info = req.flash("info");
   next();
 });
 
-// ----- Routes -----
-app.get('/', (req, res) => res.render('login')); // login page
 
+// ----- Routes -----
+
+// Home route → redirect to login or expenses
+app.get('/', (req, res) => {
+  if (req.user) return res.redirect('/expenses');
+  res.redirect('/sessions/logon');
+});
+
+// Session routes (login/register/logout)
+app.use('/sessions', require('./routes/sessionRoutes'));
+
+// API routes
+app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/expenses', authenticateUser, expensesRouter);
+app.use('/api/v1/budgets', authenticateUser, budgetsRouter);
+
+// Expenses page (server-side rendered)
 app.get('/expenses', authenticateUser, async (req, res) => {
   const Expense = require('./models/Expense');
   const userExpenses = await Expense.find({ user: req.user._id }).sort({ date: -1 });
   res.render('expenses', { expenses: userExpenses });
 });
 
-app.use('/api/v1/auth', authRouter);
-app.use('/api/v1/expenses', authenticateUser, expensesRouter);
-
-// Logout
+// Logout route
 app.post('/logout', (req, res) => {
-  req.session.destroy((err) => {
-    if (err) console.log(err);
-    res.clearCookie('connect.sid');
-    res.redirect('/');
+  req.logout(() => {
+    req.session.destroy((err) => {
+      if (err) console.error(err);
+      res.clearCookie('connect.sid');
+      res.redirect('/sessions/logon');
+    });
   });
 });
 
-// 404 and 500
+// 404 and error handlers
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
-// Start server
+// ----- Start server -----
 const port = process.env.PORT || 3000;
 const start = async () => {
   try {
@@ -119,4 +155,5 @@ const start = async () => {
     console.error('Error starting server:', error);
   }
 };
+
 start();

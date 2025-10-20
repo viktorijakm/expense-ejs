@@ -11,4 +11,4 @@ const {
 router.route('/').post(createExpense).get(getAllExpenses)
 router.route('/:id').get(getExpense).patch(updateExpense).delete(deleteExpense)
 
-module.exports = router
+module.exports = router;
