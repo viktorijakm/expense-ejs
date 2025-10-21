@@ -7,7 +7,7 @@ const passportInit = () => {
     new LocalStrategy({ usernameField: 'email', passwordField: 'password' }, async (email, password, done) => {
       try {
         const user = await User.findOne({ email });
-        if (!user) return done(null, false, { message: 'Incorrect credentials.' });
+        if (!user) return done(null, false, { message: 'User not found. Please register.' });
 
         const isMatch = await user.comparePassword(password);
         if (isMatch) return done(null, user);

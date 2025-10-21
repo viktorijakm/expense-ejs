@@ -1,26 +1,33 @@
-<h1>Expense Tracker</h1>
+<header>
+  <h1>Expense Tracker</h1>
 
-<% if (user) { %>
-  <p>Logged in as: <%= user.email %></p>
-  <form method="POST" action="/logout" style="display:inline;">
-    <button type="submit">Log Out</button>
-  </form>
-<% } %>
+  <% if (user) { %>
+    <!-- Show only when user is logged in -->
+    <div class="user-info">
+      Logged in as: <strong><%= user.email %></strong>
+      <form method="POST" action="/logout" style="display:inline;">
+        <button type="submit">Log Out</button>
+      </form>
+    </div>
+  <% } else { %>
 
-<% if (errors && errors.length > 0) { %>
-  <div class="alert alert-danger">
-    <% errors.forEach(err => { %>
-      <p><%= err %></p>
-    <% }) %>
-  </div>
-<% } %>
+  <% } %>
 
-<% if (info && info.length > 0) { %>
-  <div class="alert alert-success">
-    <% info.forEach(msg => { %>
-      <p><%= msg %></p>
-    <% }) %>
-  </div>
-<% } %>
+  <% if (errors && errors.length > 0) { %>
+    <div class="alert alert-danger">
+      <% errors.forEach(err => { %>
+        <p><%= err %></p>
+      <% }) %>
+    </div>
+  <% } %>
 
-<hr />
+  <% if (info && info.length > 0) { %>
+    <div class="alert alert-success">
+      <% info.forEach(msg => { %>
+        <p><%= msg %></p>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <hr />
+</header>

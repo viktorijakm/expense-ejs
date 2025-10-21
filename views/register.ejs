@@ -2,35 +2,32 @@
 <%- include('partials/header') %>
 
 <div class="container">
-  <h2>Your Expenses</h2>
+  <h2>Register</h2>
 
-  <form id="filterForm">
-    <label for="category">Category:</label>
-    <select id="category" name="category">
-      <option value="">All</option>
-      <option value="Utilities">Utilities</option>
-      <option value="Entertainment">Entertainment</option>
-      <option value="Groceries">Groceries</option>
-    </select>
+  <form action="/sessions/register" method="POST">
+      <input type="hidden" name="_csrf" value="<%= _csrf %>" />
+    <div>
+      <label for="email">Email:</label>
+      <input type="email" name="email" id="email" required />
+    </div>
 
-    <label for="startDate">From:</label>
-    <input type="date" id="startDate" name="startDate" />
+    <div>
+      <label for="password">Password:</label>
+      <input type="password" name="password" id="password" required />
+    </div>
 
-    <label for="endDate">To:</label>
-    <input type="date" id="endDate" name="endDate" />
+    <div>
+      <label for="confirmPassword">Confirm Password:</label>
+      <input type="password" name="confirmPassword" id="confirmPassword" required />
+    </div>
 
-    <button type="submit">Apply Filter</button>
+    <div>
+      <button type="submit">Register</button>
+      <a href="/sessions/logon">
+        <button type="button">Back to Login</button>
+      </a>
+    </div>
   </form>
-
-  <ul id="expenseList">
-    <% expenses.forEach(exp => { %>
-      <li>
-        <%= exp.description %> - $<%= exp.amount %> (<%= exp.category %>) on
-        <%= new Date(exp.date).toLocaleDateString() %>
-      </li>
-    <% }) %>
-  </ul>
 </div>
 
-<script src="/expenses.js"></script>
 <%- include('partials/footer') %>
