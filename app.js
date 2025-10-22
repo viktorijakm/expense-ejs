@@ -27,14 +27,13 @@ const flash = require('connect-flash');
 const authRouter = require('./routes/auth');
 const expensesRouter = require('./routes/expenses');
 const budgetsRouter = require('./routes/budgets');
-// const sessionRoutes = require('./routes/sessionRoutes');
 
 // Passport init
 const passportInit = require('./passport/passportInit');
 
+//CSRF
 const cookieParser = require("cookie-parser");
 const { csrfSync } = require("csrf-sync");
-
 const {
   csrfSynchronisedProtection,
   generateToken
@@ -57,13 +56,12 @@ app.use(rateLimiter({ windowMs: 15 * 60 * 1000, max: 100 }));
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+//  Parse cookies FIRST (CSRF depends on this)
 app.use(cookieParser(process.env.SESSION_SECRET));
 
-// After body parser but before routes
-app.use(csrfSynchronisedProtection);
 
 
-// ----- Sessions -----
+// Initialize sessions
 const store = new MongoDBStore({
   uri: process.env.MONGO_URI,
   collection: 'sessions',
@@ -88,15 +86,18 @@ app.use(session(sessionParams));
 // Flash messages
 app.use(flash());
 
-// Passport setup
+// Passport
 passportInit();
 app.use(passport.initialize());
 app.use(passport.session());
 
 
+// Initialize CSRF middleware 
 app.use(csrfSynchronisedProtection);
 
-// Make user and flash messages available in all views
+
+
+// Generate CSRF token for views
 app.use((req, res, next) => {
   res.locals._csrf = generateToken(req);
   res.locals.user = req.user || null;
@@ -105,31 +106,23 @@ app.use((req, res, next) => {
   next();
 });
 
-
 // ----- Routes -----
-
-// Home route → redirect to login or expenses
 app.get('/', (req, res) => {
   if (req.user) return res.redirect('/expenses');
   res.redirect('/sessions/logon');
 });
 
-// Session routes (login/register/logout)
 app.use('/sessions', require('./routes/sessionRoutes'));
-
-// API routes
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/expenses', authenticateUser, expensesRouter);
 app.use('/api/v1/budgets', authenticateUser, budgetsRouter);
 
-// Expenses page (server-side rendered)
 app.get('/expenses', authenticateUser, async (req, res) => {
   const Expense = require('./models/Expense');
   const userExpenses = await Expense.find({ user: req.user._id }).sort({ date: -1 });
   res.render('expenses', { expenses: userExpenses });
 });
 
-// Logout route
 app.post('/logout', (req, res) => {
   req.logout(() => {
     req.session.destroy((err) => {
@@ -140,11 +133,11 @@ app.post('/logout', (req, res) => {
   });
 });
 
-// 404 and error handlers
+// Errors
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
-// ----- Start server -----
+// Start server
 const port = process.env.PORT || 3000;
 const start = async () => {
   try {

@@ -1,41 +1,42 @@
 <%- include('partials/head.ejs') %>
 <%- include('partials/header.ejs') %>
 
-<h2>Your Budgets</h2>
-<a href="/api/v1/budgets/add">Add New Budget</a>
+<h2><%= budget._id ? "Edit Budget" : "Add New Budget" %></h2>
 
+<form action="<%= action %>" method="POST">
+  <input type="hidden" name="_csrf" value="<%= _csrf %>" />
 
-<% if (budgets.length === 0) { %>
-  <p>No budgets yet.</p>
-<% } else { %>
-  <table border="1" cellpadding="5">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Limit</th>
-        <th>Period</th>
-        <th>Active</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% budgets.forEach(budget => { %>
-        <tr>
-          <td><%= budget.name %></td>
-          <td>$<%= budget.limit %></td>
-          <td><%= budget.period %></td>
-          <td><%= budget.active ? 'Yes' : 'No' %></td>
-          <td>
-            <a href="/api/v1/budgets/edit/<%= budget._id %>">Edit</a>
-            <form method="POST" action="/api/v1/budgets/delete/<%= budget._id %>" style="display:inline;">
-              <input type="hidden" name="_csrf" value="<%= _csrf %>" />
-              <button type="submit">Delete</button>
-            </form>
-          </td>
-        </tr>
-      <% }) %>
-    </tbody>
-  </table>
-<% } %>
+  <div>
+    <label for="name">Budget Name:</label>
+    <input type="text" id="name" name="name" value="<%= budget.name || '' %>" required />
+  </div>
+
+  <div>
+    <label for="limit">Limit:</label>
+    <input type="number" id="limit" name="limit" value="<%= budget.limit || '' %>" required />
+  </div>
+
+  <div>
+    <label for="period">Period:</label>
+    <select id="period" name="period" required>
+      <option value="">Select one</option>
+      <option value="weekly" <%= budget.period === 'weekly' ? 'selected' : '' %>>Weekly</option>
+      <option value="monthly" <%= budget.period === 'monthly' ? 'selected' : '' %>>Monthly</option>
+      <option value="yearly" <%= budget.period === 'yearly' ? 'selected' : '' %>>Yearly</option>
+    </select>
+  </div>
+
+  <% if (budget._id) { %>
+    <div>
+      <label>
+        <input type="checkbox" name="active" <%= budget.active ? 'checked' : '' %> />
+        Active
+      </label>
+    </div>
+  <% } %>
+
+  <button type="submit"><%= budget._id ? "Update Budget" : "Create Budget" %></button>
+  <a href="/api/v1/budgets">Cancel</a>
+</form>
 
 <%- include('partials/footer.ejs') %>
