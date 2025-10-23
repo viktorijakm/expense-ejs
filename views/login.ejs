@@ -6,6 +6,7 @@
 
   <form action="/sessions/logon" method="POST">
     <input type="hidden" name="_csrf" value="<%= _csrf %>" />
+
     <div>
       <label for="email">Email:</label>
       <input type="email" name="email" id="email" required />
@@ -16,15 +17,15 @@
       <input type="password" name="password" id="password" required />
     </div>
 
-<div>
-  <button type="submit">Log In</button>
-  <form action="/sessions/register" method="GET" style="display:inline;">
-    <button type="submit">Register</button>
-  </form>
-</div>
+     <div>
+     <button type="submit">Log In</button>
+     </div>
+   </form>
 
-
-  </form>
-</div>
+ <!-- Register button must NOT be inside login form -->
+  <form action="/sessions/register" method="GET"  style="display:inline;">
+   <button type="submit">Register</button>
+   </form>
+</div>   
 
 <%- include('partials/footer') %>

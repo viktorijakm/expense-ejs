@@ -6,8 +6,9 @@
     <div class="user-info">
       Logged in as: <strong><%= user.email %></strong>
       <form method="POST" action="/logout" style="display:inline;">
-        <button type="submit">Log Out</button>
-      </form>
+  <input type="hidden" name="_csrf" value="<%= _csrf %>" />
+  <button type="submit">Log Out</button>
+</form>
     </div>
   <% } else { %>
 

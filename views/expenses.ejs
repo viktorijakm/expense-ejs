@@ -4,33 +4,32 @@
 <div class="container">
   <h2>Your Expenses</h2>
 
-  <form id="filterForm">
-    <label for="category">Category:</label>
-    <select id="category" name="category">
-      <option value="">All</option>
-      <option value="Utilities">Utilities</option>
-      <option value="Entertainment">Entertainment</option>
-      <option value="Groceries">Groceries</option>
-    </select>
+  <!-- Add new expense -->
+  <a href="/api/v1/expenses/add"><button type="button">Add New Expense</button></a>
 
-    <label for="startDate">From:</label>
-    <input type="date" id="startDate" name="startDate" />
+  <% if (!expenses || expenses.length === 0) { %>
+    <p>No expenses found.</p>
+  <% } else { %>
+    <ul id="expenseList">
+      <% expenses.forEach(exp => { %>
+        <li>
+          <%= exp.description %> - $<%= exp.amount %> (<%= exp.category %>) on
+          <%= new Date(exp.date).toLocaleDateString() %>
 
-    <label for="endDate">To:</label>
-    <input type="date" id="endDate" name="endDate" />
+          <!-- Edit -->
+          <a href="/api/v1/expenses/edit/<%= exp._id %>">
+            <button type="button">Edit</button>
+          </a>
 
-    <button type="submit">Apply Filter</button>
-  </form>
-
-  <ul id="expenseList">
-    <% expenses.forEach(exp => { %>
-      <li>
-        <%= exp.description %> - $<%= exp.amount %> (<%= exp.category %>) on
-        <%= new Date(exp.date).toLocaleDateString() %>
-      </li>
-    <% }) %>
-  </ul>
+          <!-- Delete -->
+          <form method="POST" action="/api/v1/expenses/<%= exp._id %>?_method=DELETE" style="display:inline;">
+            <input type="hidden" name="_csrf" value="<%= _csrf %>" />
+            <button type="submit">Delete</button>
+          </form>
+        </li>
+      <% }) %>
+    </ul>
+  <% } %>
 </div>
 
-<script src="/expenses.js"></script>
 <%- include('partials/footer') %>
