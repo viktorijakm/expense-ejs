@@ -1,3 +1,66 @@
+/* ====== GLOBAL APP BACKGROUND ====== */
+body {
+  background-color: #007bff; /* blue background */
+  color: white;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+/* ====== GENERAL ELEMENT STYLING ====== */
+h1,
+h2,
+h3,
+label,
+p,
+li {
+  color: rgb(7, 0, 0);
+}
+
+a {
+  color: #ffeb3b; /* bright yellow for links */
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ====== FORMS ====== */
+form {
+  background-color: rgba(255, 255, 255, 0.15); /* slight transparency */
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 400px;
+  margin: 30px auto;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+input,
+button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 5px;
+}
+
+input {
+  background: white;
+  color: #333;
+}
+
+button {
+  background-color: #0056b3;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #003f88;
+}
+
 header {
   margin-bottom: 1.5rem;
 }

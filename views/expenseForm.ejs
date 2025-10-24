@@ -3,7 +3,12 @@
 
 <h2><%= expense && expense._id ? "Edit Expense" : "Add New Expense" %></h2>
 
-<form method="POST" action="<%= action %>">
+<form method="POST" 
+      action="<%= expense && expense._id 
+                ? '/api/v1/expenses/' + expense._id + '?_method=PATCH' 
+                : '/api/v1/expenses' %>">
+
+  
   <input type="hidden" name="_csrf" value="<%= _csrf %>" />
 
   <div>

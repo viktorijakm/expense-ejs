@@ -1,21 +1,23 @@
 import { setupFilters } from "./filter.js";
 
 // Grab DOM elements
-const token = localStorage.getItem("token");
 const expenseForm = document.getElementById("expenseForm");
 const expensesList = document.getElementById("expensesList");
 const responseDiv = document.getElementById("response");
 const logoutBtn = document.getElementById("logoutBtn");
 
-// Redirect to login if no token
-if (!token) {
-  window.location.href = "login.html";
-}
-
-// Logout button
-logoutBtn.addEventListener("click", () => {
-  localStorage.removeItem("token");
-  window.location.href = "login.html";
+// Logout button — destroy session on server
+logoutBtn.addEventListener("click", async () => {
+  try {
+    await fetch("/logout", {
+      method: "POST",
+      credentials: "include", // ensure cookie is sent
+    });
+    window.location.href = "/sessions/logon";
+  } catch (err) {
+    console.error(err);
+    responseDiv.textContent = "Error logging out.";
+  }
 });
 
 // Load expenses (optionally filtered)
@@ -31,7 +33,7 @@ async function loadExpenses(filters = {}) {
     if ([...params].length > 0) url += `?${params.toString()}`;
 
     const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include", // send session cookie
     });
 
     const data = await res.json();
@@ -57,6 +59,7 @@ async function loadExpenses(filters = {}) {
 // Add expense
 expenseForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const title = document.getElementById("title").value;
   const amount = document.getElementById("amount").value;
   const category = document.getElementById("category").value;
@@ -65,10 +68,8 @@ expenseForm.addEventListener("submit", async (e) => {
   try {
     const res = await fetch("/api/v1/expenses", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // send cookie so req.user exists
       body: JSON.stringify({ title, amount, category, date }),
     });
 
@@ -77,7 +78,7 @@ expenseForm.addEventListener("submit", async (e) => {
     if (res.ok) {
       responseDiv.textContent = "Expense added!";
       expenseForm.reset();
-      loadExpenses(); // reload expenses
+      loadExpenses(); // reload list
     } else {
       responseDiv.textContent = data.msg || "Failed to add expense.";
     }
