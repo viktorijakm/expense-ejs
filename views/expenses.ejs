@@ -5,7 +5,8 @@
   <h2>Your Expenses</h2>
 
   <!-- Add new expense -->
-  <a href="/api/v1/expenses/add"><button type="button">Add New Expense</button></a>
+ <a href="/api/v1/expenses/add" class="btn btn-light">Add New Expense</a>
+
 
   <% if (!expenses || expenses.length === 0) { %>
     <p>No expenses found.</p>
@@ -14,7 +15,8 @@
       <% expenses.forEach(exp => { %>
         <li>
           <%= exp.description %> - $<%= exp.amount %> (<%= exp.category %>) on
-          <%= new Date(exp.date).toLocaleDateString() %>
+          <%= new Date(exp.date.getTime() + new Date().getTimezoneOffset() * 60000).toLocaleDateString() %>
+
 
           <!-- Edit -->
           <a href="/api/v1/expenses/edit/<%= exp._id %>">
@@ -22,10 +24,10 @@
           </a>
 
           <!-- Delete -->
-          <form method="POST" action="/api/v1/expenses/<%= exp._id %>?_method=DELETE" style="display:inline;">
-            <input type="hidden" name="_csrf" value="<%= _csrf %>" />
-            <button type="submit">Delete</button>
-          </form>
+<form method="POST" action="/api/v1/expenses/<%= exp._id %>?_method=DELETE" style="display:inline;">
+  <input type="hidden" name="_csrf" value="<%= _csrf %>" />
+  <button type="submit">Delete</button>
+</form>
         </li>
       <% }) %>
     </ul>
