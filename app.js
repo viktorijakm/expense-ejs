@@ -104,7 +104,20 @@ app.use((req, res, next) => {
   next();
 });
 
-// ----- Routes -----
+
+// Setting Content-Type for HTML and JSON responses 
+app.use((req, res, next) => {
+  if (req.path === "/multiply") {
+    res.set("Content-Type", "application/json");
+  } else {
+    res.set("Content-Type", "text/html");
+  }
+  next();
+});
+
+
+
+// Routes 
 app.get("/", (req, res) => {
   if (req.user) return res.redirect("/expenses");
   res.redirect("/sessions/logon");
@@ -133,20 +146,68 @@ app.post("/logout", (req, res) => {
   });
 });
 
+
+//  SIMPLE MULTIPLY API (for testing) 
+app.get("/multiply", (req, res) => {
+  const first = parseFloat(req.query.first);
+  const second = parseFloat(req.query.second);
+  let result;
+
+  if (isNaN(first) || isNaN(second)) {
+    result = "NaN";
+  } else {
+    result = first * second;
+  }
+
+  res.json({ result });
+});
+
+
+
 // Errors
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
 // Start server
+// const port = process.env.PORT || 3000;
+
+// const start = async () => {
+//   try {
+//     // Choose correct database depending on environment
+
+
+    let mongoURL = process.env.MONGO_URI;
+    if (process.env.NODE_ENV === "test") {
+      mongoURL = process.env.MONGO_URI_TEST;
+    }
+
+//     await connectDB(mongoURL);
+//     console.log(`Connected to MongoDB (${process.env.NODE_ENV || "development"})`);
+
+//     // Only start listening if not in test mode
+//     if (process.env.NODE_ENV !== "test") {
+//       app.listen(port, () => console.log(`Server listening on port ${port}...`));
+//     }
+//   } catch (error) {
+//     console.error("Error starting server:", error);
+//   }
+// };
+
+// start();
+
+
 const port = process.env.PORT || 3000;
-const start = async () => {
+const start = () => {
   try {
-    await connectDB(process.env.MONGO_URI);
-    console.log("Connected to MongoDB");
-    app.listen(port, () => console.log(`Server listening on port ${port}...`));
+    require("./db/connect")(mongoURL);
+    return app.listen(port, () =>
+      console.log(`Server is listening on port ${port}...`)
+    );
   } catch (error) {
-    console.error("Error starting server:", error);
+    console.log(error);
   }
 };
 
 start();
+
+module.exports = { app };
